@@ -44,6 +44,7 @@ func (b *Builder) buildConnection(source reflect.Value, parent reflect.Value) (g
 	}
 	name := typeName(el.Type())
 	node, err := b.mapObject(el, parent, []*graphql.Interface{b.interfaces["INode"]}, name+"Node")
+	node.Fields()["id"].Type = graphql.NewNonNull(node.Fields()["id"].Type)
 	if err != nil {
 		return nil, err
 	}

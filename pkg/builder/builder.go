@@ -170,7 +170,7 @@ func (b *Builder) buildObject(source reflect.Value, parent reflect.Value) ([]*no
 					node.inputOnly = true
 				case "readonly":
 					node.readOnly = true
-				case "nonull":
+				case "nonnull":
 					node.noNull = true
 				case "-":
 					node.skip = true
