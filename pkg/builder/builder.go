@@ -16,7 +16,7 @@ type nodeType struct {
 	source       reflect.Value
 	inputOnly    bool
 	readOnly     bool
-	noNull       bool
+	nonNull      bool
 	skip         bool
 	name         string
 	alias        string
@@ -100,7 +100,7 @@ func (b *Builder) QueryFields(source reflect.Value, parent reflect.Value) (graph
 		if gType == nil {
 			continue
 		}
-		if node.noNull {
+		if node.nonNull {
 			gType = graphql.NewNonNull(gType)
 		}
 
@@ -171,7 +171,7 @@ func (b *Builder) buildObject(source reflect.Value, parent reflect.Value) ([]*no
 				case "readonly":
 					node.readOnly = true
 				case "nonnull":
-					node.noNull = true
+					node.nonNull = true
 				case "-":
 					node.skip = true
 				}

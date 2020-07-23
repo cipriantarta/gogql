@@ -13,14 +13,14 @@ type relayInfo struct {
 	method string
 }
 type PageInfo struct {
-	StartCursor string `graphql:"nonull"`
-	EndCursor   string `graphql:"nonull"`
-	HasMore     bool   `graphql:"nonull"`
+	StartCursor string `graphql:"nonnull"`
+	EndCursor   string `graphql:"nonnull"`
+	HasMore     bool   `graphql:"nonnull"`
 }
 
 type Edge struct {
 	Node   interface{}
-	Cursor string `graphql:"nonull"`
+	Cursor string `graphql:"nonnull"`
 }
 
 type Connection struct {
