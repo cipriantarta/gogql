@@ -75,6 +75,10 @@ func connectionResolver(nodes interface{}, err error, relayInfo *relayInfo) (int
 	edges := make([]interface{}, 0)
 	pageInfo := &PageInfo{HasMore: n.Len() > types.PageLimit}
 	for i := 0; i < n.Len(); i++ {
+		if i >= types.PageLimit {
+			pageInfo.EndCursor = edges[i-1].(*Edge).Cursor
+			break
+		}
 		node := n.Index(i)
 		cursor := node.Elem().FieldByName(relayInfo.key)
 		if reflect.Ptr == cursor.Kind() {
