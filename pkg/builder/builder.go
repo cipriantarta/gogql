@@ -10,7 +10,6 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	"github.com/sanity-io/litter"
 )
 
 type nodeType struct {
@@ -286,7 +285,6 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 		arg = reflect.Zero(methodType.In(2)).Interface()
 	}
 	m := func(p graphql.ResolveParams) (interface{}, error) {
-		litter.Dump(p.Source)
 		v := reflect.ValueOf(p.Source)
 		if v.IsValid() {
 			m := v.MethodByName(name)
