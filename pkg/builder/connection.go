@@ -67,15 +67,15 @@ func (b *Builder) buildConnection(source reflect.Value, parent reflect.Value) (g
 	return graphql.NewNonNull(connection), nil
 }
 
-func connectionResolver(nodes interface{}, err error, relayInfo *relayInfo) (interface{}, error) {
+func connectionResolver(nodes interface{}, err error, relayInfo *relayInfo, pageArgs *types.PageArguments) (interface{}, error) {
 	n := reflect.ValueOf(nodes)
 	if n.Kind() != reflect.Slice {
 		panic("Connection result expects a slice")
 	}
 	edges := make([]interface{}, 0)
-	pageInfo := &PageInfo{HasMore: n.Len() > types.PageLimit}
+	pageInfo := &PageInfo{HasMore: n.Len() > pageArgs.Limit}
 	for i := 0; i < n.Len(); i++ {
-		if i >= types.PageLimit {
+		if i >= pageArgs.Limit {
 			pageInfo.EndCursor = edges[i-1].(*Edge).Cursor
 			break
 		}

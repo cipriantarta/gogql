@@ -28,20 +28,22 @@ type nodeType struct {
 }
 
 type Builder struct {
-	scalars       map[string]*graphql.Scalar
-	queryTypes    map[string]*graphql.Object
-	mutationTypes map[string]*graphql.InputObject
-	interfaces    map[string]*graphql.Interface
-	enums         map[string]*graphql.Enum
+	scalars         map[string]*graphql.Scalar
+	queryTypes      map[string]*graphql.Object
+	mutationTypes   map[string]*graphql.InputObject
+	interfaces      map[string]*graphql.Interface
+	enums           map[string]*graphql.Enum
+	PaginationLimit int
 }
 
 func New() *Builder {
 	return &Builder{
-		scalars:       scalars,
-		interfaces:    make(map[string]*graphql.Interface),
-		queryTypes:    make(map[string]*graphql.Object),
-		mutationTypes: make(map[string]*graphql.InputObject),
-		enums:         make(map[string]*graphql.Enum),
+		scalars:         scalars,
+		interfaces:      make(map[string]*graphql.Interface),
+		queryTypes:      make(map[string]*graphql.Object),
+		mutationTypes:   make(map[string]*graphql.InputObject),
+		enums:           make(map[string]*graphql.Enum),
+		PaginationLimit: 100,
 	}
 }
 
@@ -285,6 +287,7 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 		arg = reflect.Zero(methodType.In(2)).Interface()
 	}
 	m := func(p graphql.ResolveParams) (interface{}, error) {
+		var pageArgs *types.PageArguments
 		v := reflect.ValueOf(p.Source)
 		if v.IsValid() {
 			m := v.MethodByName(name)
@@ -297,7 +300,7 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 		}
 		if nIn > 1 {
 			if isRelay {
-				pageArgs := &types.PageArguments{}
+				pageArgs = &types.PageArguments{Limit: b.PaginationLimit}
 				if err := mapstructure.Decode(p.Args, pageArgs); err != nil {
 					panic(err)
 				}
@@ -322,7 +325,7 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 			err = e
 		}
 		if isRelay {
-			return connectionResolver(r[0].Interface(), err, relay)
+			return connectionResolver(r[0].Interface(), err, relay, pageArgs)
 		}
 		return r[0].Interface(), err
 	}

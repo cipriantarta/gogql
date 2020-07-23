@@ -11,9 +11,10 @@ func New(query interface{},
 	mutation interface{},
 	scalars map[string]*graphql.Scalar,
 	enums map[string]*graphql.Enum,
-	objectTypes map[string]*graphql.Object) (*graphql.Schema, error) {
+	objectTypes map[string]*graphql.Object, paginationLimit int) (*graphql.Schema, error) {
 
 	b := builder.New()
+	b.PaginationLimit = paginationLimit
 	for k, v := range scalars {
 		b.Scalar(k, v)
 	}

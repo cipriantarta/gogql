@@ -32,7 +32,7 @@ func (q *Query) ResolveUser(p graphql.ResolveParams) (interface{}, error) {
 
 func TestSchema(t *testing.T) {
 	root := &Query{}
-	s, err := gogql.New(root, nil, nil, nil, nil)
+	s, err := gogql.New(root, nil, nil, nil, nil, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
