@@ -10,6 +10,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
+	"github.com/sanity-io/litter"
 )
 
 type nodeType struct {
@@ -62,6 +63,9 @@ func (b *Builder) Enum(name string, value *graphql.Enum) {
 
 func (b *Builder) QueryFields(source reflect.Value, parent reflect.Value) (graphql.Fields, error) {
 	result := make(graphql.Fields, 0)
+	if source.IsValid() && source.IsZero() {
+		source = reflect.New(source.Type())
+	}
 	nodes, err := b.buildObject(source, parent)
 	if err != nil {
 		return nil, err
@@ -238,6 +242,9 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 	var arg interface{}
 	if nIn > 0 {
 		p := methodType.In(0)
+		if p.Kind() == reflect.Ptr {
+			p = p.Elem()
+		}
 		if p != reflect.TypeOf(graphql.ResolveParams{}) {
 			panic(fmt.Sprintf("First argument to %s must be `ResolveParams`", name))
 		}
@@ -279,6 +286,14 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 		arg = reflect.Zero(methodType.In(2)).Interface()
 	}
 	m := func(p graphql.ResolveParams) (interface{}, error) {
+		litter.Dump(p.Source)
+		v := reflect.ValueOf(p.Source)
+		if v.IsValid() {
+			m := v.MethodByName(name)
+			if m.IsValid() {
+				method = m
+			}
+		}
 		if nIn > 0 {
 			in[0] = reflect.ValueOf(p)
 		}

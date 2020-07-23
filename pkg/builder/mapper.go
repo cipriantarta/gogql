@@ -124,9 +124,9 @@ func (b *Builder) mapSequence(source reflect.Value) *graphql.List {
 	if !isSequence(source) {
 		return nil
 	}
-	el := reflect.New(source.Type().Elem()).Elem()
+	el := reflect.New(source.Type().Elem())
 
-	inner, err := b.mapOutput(el, reflect.Value{})
+	inner, err := b.mapOutput(el.Elem(), el)
 	if err != nil {
 		panic(err)
 	}
