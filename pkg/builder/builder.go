@@ -286,7 +286,6 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 		b.arguments(p, args, name)
 	}
 	m := func(p graphql.ResolveParams) (interface{}, error) {
-		arg = reflect.Zero(methodType.In(2)).Interface()
 		var pageArgs *types.PageArguments
 		v := reflect.ValueOf(p.Source)
 		if v.IsValid() {
@@ -309,11 +308,13 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 				if err := mapstructure.Decode(p.Args, &arg); err != nil {
 					panic(err)
 				}
+				arg = reflect.Zero(methodType.In(2)).Interface()
 				in[1] = reflect.ValueOf(arg)
 			}
 
 		}
 		if nIn > 2 {
+			arg = reflect.Zero(methodType.In(2)).Interface()
 			if err := mapstructure.Decode(p.Args, &arg); err != nil {
 				panic(err)
 			}
