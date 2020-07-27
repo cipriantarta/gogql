@@ -283,10 +283,10 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 		if p.Kind() != reflect.Struct {
 			panic(fmt.Sprintf("Third argument to %s must be a struct", name))
 		}
-		b.arguments(methodType.In(2), args, name)
-		arg = reflect.Zero(methodType.In(2)).Interface()
+		b.arguments(p, args, name)
 	}
 	m := func(p graphql.ResolveParams) (interface{}, error) {
+		arg = reflect.Zero(methodType.In(2)).Interface()
 		var pageArgs *types.PageArguments
 		v := reflect.ValueOf(p.Source)
 		if v.IsValid() {
