@@ -9,14 +9,13 @@ import (
 	"github.com/graphql-go/graphql"
 	"github.com/iancoleman/strcase"
 	"github.com/mitchellh/mapstructure"
-	"github.com/pkg/errors"
 )
 
 type nodeType struct {
 	source       reflect.Value
 	inputOnly    bool
 	readOnly     bool
-	nonNull      bool
+	required     bool
 	skip         bool
 	name         string
 	alias        string
@@ -70,10 +69,7 @@ func (b *Builder) QueryFields(source reflect.Value, parent reflect.Value) (graph
 	if source.IsValid() && source.IsZero() {
 		source = reflect.New(source.Type())
 	}
-	nodes, err := b.buildObject(source, parent)
-	if err != nil {
-		return nil, err
-	}
+	nodes := b.buildObject(source, parent)
 	for _, node := range nodes {
 		if node.skip {
 			continue
@@ -90,20 +86,14 @@ func (b *Builder) QueryFields(source reflect.Value, parent reflect.Value) (graph
 		}
 		var gType graphql.Type
 		if node.isRelay {
-			gType, err = b.buildConnection(node.source, parent)
-			if err != nil {
-				return nil, err
-			}
+			gType = b.buildConnection(node.source, parent)
 		} else {
-			gType, err = b.mapOutput(node.source, parent)
-			if err != nil {
-				return nil, err
-			}
+			gType = b.mapOutput(node.source, parent)
 		}
 		if gType == nil {
 			continue
 		}
-		if node.nonNull {
+		if node.required {
 			gType = graphql.NewNonNull(gType)
 		}
 
@@ -120,12 +110,9 @@ func (b *Builder) QueryFields(source reflect.Value, parent reflect.Value) (graph
 }
 
 // InputFields - build the GraphQL fields for an input object
-func (b *Builder) InputFields(source reflect.Value, parent reflect.Value) (graphql.InputObjectConfigFieldMap, error) {
+func (b *Builder) InputFields(source reflect.Value, parent reflect.Value) graphql.InputObjectConfigFieldMap {
 	result := make(graphql.InputObjectConfigFieldMap, 0)
-	nodes, err := b.buildObject(source, parent)
-	if err != nil {
-		return nil, err
-	}
+	nodes := b.buildObject(source, parent)
 	for _, node := range nodes {
 		if node.skip {
 			continue
@@ -138,9 +125,9 @@ func (b *Builder) InputFields(source reflect.Value, parent reflect.Value) (graph
 		}
 
 		name := strcase.ToLowerCamel(node.name)
-		gType, err := b.mapInput(node.source, parent)
-		if err != nil {
-			return nil, err
+		gType := b.mapInput(node.source, parent)
+		if node.required {
+			gType = graphql.NewNonNull(gType)
 		}
 
 		field := &graphql.InputObjectFieldConfig{
@@ -148,16 +135,17 @@ func (b *Builder) InputFields(source reflect.Value, parent reflect.Value) (graph
 		}
 		result[name] = field
 	}
-	return result, nil
+	return result
 }
 
-func (b *Builder) buildObject(source reflect.Value, parent reflect.Value) ([]*nodeType, error) {
+func (b *Builder) buildObject(source reflect.Value, parent reflect.Value) []*nodeType {
 	nodes := make([]*nodeType, 0)
 	if source.Kind() == reflect.Ptr {
 		return b.buildObject(source.Elem(), source)
 	}
 	if source.Kind() != reflect.Struct {
-		return nil, errors.Errorf("Expected a struct for %s", source)
+		err := "Expected a struct for %s:%s. Perhaps a custom scalar was intended?"
+		panic(fmt.Sprintf(err, source.Type().Name(), source.Kind().String()))
 	}
 
 	for i := 0; i < source.NumField(); i++ {
@@ -174,8 +162,8 @@ func (b *Builder) buildObject(source reflect.Value, parent reflect.Value) ([]*no
 					node.inputOnly = true
 				case "readonly":
 					node.readOnly = true
-				case "nonnull":
-					node.nonNull = true
+				case "required":
+					node.required = true
 				case "-":
 					node.skip = true
 				}
@@ -219,7 +207,7 @@ func (b *Builder) buildObject(source reflect.Value, parent reflect.Value) ([]*no
 		}
 		nodes = append(nodes, node)
 	}
-	return nodes, nil
+	return nodes
 }
 
 func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool, relay *relayInfo) (graphql.FieldResolveFn, graphql.FieldConfigArgument) {
@@ -354,10 +342,7 @@ func (b *Builder) arguments(t reflect.Type, args graphql.FieldConfigArgument, re
 		}
 
 		argVal := reflect.New(el).Elem()
-		v, err := b.mapInput(argVal, parent)
-		if err != nil {
-			panic(err)
-		}
+		v := b.mapInput(argVal, parent)
 
 		if tag, ok := f.Tag.Lookup("graphql"); ok {
 			skip := false

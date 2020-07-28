@@ -13,14 +13,14 @@ type relayInfo struct {
 	method string
 }
 type PageInfo struct {
-	StartCursor string `graphql:"nonnull"`
-	EndCursor   string `graphql:"nonnull"`
-	HasMore     bool   `graphql:"nonnull"`
+	StartCursor string `graphql:"required"`
+	EndCursor   string `graphql:"required"`
+	HasMore     bool   `graphql:"required"`
 }
 
 type Edge struct {
 	Node   interface{}
-	Cursor string `graphql:"nonnull"`
+	Cursor string `graphql:"required"`
 }
 
 type Connection struct {
@@ -28,7 +28,7 @@ type Connection struct {
 	Edges    interface{}
 }
 
-func (b *Builder) buildConnection(source reflect.Value, parent reflect.Value) (graphql.Output, error) {
+func (b *Builder) buildConnection(source reflect.Value, parent reflect.Value) graphql.Output {
 	b.buildInterfaces()
 
 	if isSequence(source) {
@@ -44,28 +44,28 @@ func (b *Builder) buildConnection(source reflect.Value, parent reflect.Value) (g
 	}
 	name := typeName(el.Type())
 	node, err := b.mapObject(el, parent, []*graphql.Interface{b.interfaces["INode"]}, name+"Node")
-	node.Fields()["id"].Type = graphql.NewNonNull(node.Fields()["id"].Type)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
+	node.Fields()["id"].Type = graphql.NewNonNull(node.Fields()["id"].Type)
 
 	if _, err := b.mapObject(reflect.ValueOf(&PageInfo{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IPageInfo"]}, ""); err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	edge, err := b.mapObject(reflect.ValueOf(&Edge{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IEdge"]}, name+"Edge")
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	edge.AddFieldConfig("node", &graphql.Field{Type: graphql.NewNonNull(node)})
 	edges := graphql.NewList(edge)
 
 	connection, err := b.mapObject(reflect.ValueOf(&Connection{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IConnection"]}, name+"Connection")
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	connection.AddFieldConfig("edges", &graphql.Field{Type: graphql.NewNonNull(edges)})
-	return graphql.NewNonNull(connection), nil
+	return graphql.NewNonNull(connection)
 }
 
 func connectionResolver(nodes interface{}, err error, relayInfo *relayInfo, pageArgs *types.PageArguments) (interface{}, error) {

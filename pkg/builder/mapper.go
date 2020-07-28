@@ -7,54 +7,56 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-type Intersaction interface {
+//Intersection - GraphQL types used either as Output or Input
+type Intersection interface {
 	Name() string
 	Description() string
 	String() string
 	Error() error
 }
 
-var _ Intersaction = (*graphql.Scalar)(nil)
-var _ Intersaction = (*graphql.Enum)(nil)
-var _ Intersaction = (*graphql.List)(nil)
-var _ Intersaction = (*graphql.NonNull)(nil)
+var _ Intersection = (*graphql.Scalar)(nil)
+var _ Intersection = (*graphql.Enum)(nil)
+var _ Intersection = (*graphql.List)(nil)
+var _ Intersection = (*graphql.NonNull)(nil)
 
-func (b *Builder) mapOutput(source reflect.Value, parent reflect.Value) (graphql.Output, error) {
+func (b *Builder) mapOutput(source reflect.Value, parent reflect.Value) graphql.Output {
 	if intersection := b.mapIntersection(source, false); intersection != nil {
-		return intersection, nil
+		return intersection
 	}
-	if ptr := b.mapPointer(source); ptr != nil {
-		return ptr, nil
+	if ptr := b.mapPointer(source, false); ptr != nil {
+		return ptr
 	}
-	if source.Kind() == reflect.Struct {
-		return b.mapObject(source, parent, nil, "")
+	if source.Kind() != reflect.Struct {
+		panic("Expected struct")
 	}
-	return nil, nil
+	r, err := b.mapObject(source, parent, nil, "")
+	if err != nil {
+		panic(err)
+	}
+	return r
 }
 
-func (b *Builder) mapInput(source reflect.Value, parent reflect.Value) (graphql.Input, error) {
-	if intersection := b.mapIntersection(source, false); intersection != nil {
-		return intersection, nil
+func (b *Builder) mapInput(source reflect.Value, parent reflect.Value) graphql.Input {
+	if intersection := b.mapIntersection(source, true); intersection != nil {
+		return intersection
 	}
-	if ptr := b.mapPointer(source); ptr != nil {
-		return ptr, nil
+	if ptr := b.mapPointer(source, true); ptr != nil {
+		return ptr
 	}
 	name := fmt.Sprintf("%sInput", typeName(source.Type()))
 	in, ok := b.mutationTypes[name]
 	if ok {
-		return in, nil
+		return in
 	}
 
-	fields, err := b.InputFields(source, parent)
-	if err != nil {
-		return nil, err
-	}
+	fields := b.InputFields(source, parent)
 	o := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name:   name,
 		Fields: fields,
 	})
 	b.mutationTypes[name] = o
-	return o, nil
+	return o
 }
 
 func (b *Builder) mapObject(source reflect.Value, parent reflect.Value, interfaces []*graphql.Interface, alias string) (*graphql.Object, error) {
@@ -79,14 +81,14 @@ func (b *Builder) mapObject(source reflect.Value, parent reflect.Value, interfac
 	return obj, nil
 }
 
-func (b *Builder) mapIntersection(source reflect.Value, isInput bool) Intersaction {
+func (b *Builder) mapIntersection(source reflect.Value, isInput bool) Intersection {
 	if scalar := b.mapScalar(source); scalar != nil {
 		return scalar
 	}
 	if enum := b.mapEnum(source); enum != nil {
 		return enum
 	}
-	if sequence := b.mapSequence(source); sequence != nil {
+	if sequence := b.mapSequence(source, isInput); sequence != nil {
 		return sequence
 	}
 	return nil
@@ -108,7 +110,7 @@ func (b *Builder) mapEnum(source reflect.Value) *graphql.Enum {
 	return nil
 }
 
-func (b *Builder) mapPointer(source reflect.Value) graphql.Output {
+func (b *Builder) mapPointer(source reflect.Value, isInput bool) graphql.Type {
 	if !isPtr(source) {
 		return nil
 	}
@@ -116,19 +118,22 @@ func (b *Builder) mapPointer(source reflect.Value) graphql.Output {
 	if !el.IsValid() {
 		el = reflect.New(source.Type().Elem()).Elem()
 	}
-	r, _ := b.mapOutput(el, source)
-	return r
+	if isInput {
+		return b.mapInput(el, source)
+	}
+	return b.mapOutput(el, source)
 }
 
-func (b *Builder) mapSequence(source reflect.Value) *graphql.List {
+func (b *Builder) mapSequence(source reflect.Value, isInput bool) *graphql.List {
 	if !isSequence(source) {
 		return nil
 	}
 	el := reflect.New(source.Type().Elem())
-
-	inner, err := b.mapOutput(el.Elem(), el)
-	if err != nil {
-		panic(err)
+	var inner graphql.Type
+	if isInput {
+		inner = b.mapInput(el.Elem(), el)
+	} else {
+		inner = b.mapOutput(el.Elem(), el)
 	}
 	return graphql.NewList(inner)
 }
