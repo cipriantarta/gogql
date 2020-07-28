@@ -244,7 +244,6 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 
 	in := make([]reflect.Value, nIn)
 	args := make(graphql.FieldConfigArgument)
-	var arg interface{}
 	if nIn > 0 {
 		p := methodType.In(0)
 		if p.Kind() == reflect.Ptr {
@@ -270,7 +269,6 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 				panic(fmt.Sprintf("Second argument to %s must be a struct", name))
 			}
 			b.arguments(p, args, name)
-			arg = reflect.Zero(methodType.In(1)).Interface()
 		}
 	}
 	if nIn > 2 {
@@ -309,16 +307,16 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 				}
 				in[1] = reflect.ValueOf(pageArgs)
 			} else {
+				arg := reflect.Zero(methodType.In(1)).Interface()
 				if err := mapstructure.Decode(p.Args, &arg); err != nil {
 					panic(err)
 				}
-				arg = reflect.Zero(methodType.In(1)).Interface()
 				in[1] = reflect.ValueOf(arg)
 			}
 
 		}
 		if nIn > 2 {
-			arg = reflect.Zero(methodType.In(2)).Interface()
+			arg := reflect.Zero(methodType.In(2)).Interface()
 			if err := mapstructure.Decode(p.Args, &arg); err != nil {
 				panic(err)
 			}
