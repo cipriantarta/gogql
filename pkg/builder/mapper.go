@@ -27,14 +27,10 @@ func (b *Builder) mapOutput(source reflect.Value, parent reflect.Value) graphql.
 	if ptr := b.mapPointer(source, false); ptr != nil {
 		return ptr
 	}
-	if source.Kind() != reflect.Struct {
-		panic("Expected struct")
+	if source.Kind() == reflect.Struct {
+		return b.mapObject(source, parent, nil, "")
 	}
-	r, err := b.mapObject(source, parent, nil, "")
-	if err != nil {
-		panic(err)
-	}
-	return r
+	return nil
 }
 
 func (b *Builder) mapInput(source reflect.Value, parent reflect.Value) graphql.Input {
@@ -59,18 +55,18 @@ func (b *Builder) mapInput(source reflect.Value, parent reflect.Value) graphql.I
 	return o
 }
 
-func (b *Builder) mapObject(source reflect.Value, parent reflect.Value, interfaces []*graphql.Interface, alias string) (*graphql.Object, error) {
+func (b *Builder) mapObject(source reflect.Value, parent reflect.Value, interfaces []*graphql.Interface, alias string) *graphql.Object {
 	name := alias
 	if name == "" {
 		name = typeName(source.Type())
 	}
 	obj, ok := b.queryTypes[name]
 	if ok {
-		return obj, nil
+		return obj
 	}
 	fields, err := b.QueryFields(source, parent)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	obj = graphql.NewObject(graphql.ObjectConfig{
 		Name:       name,
@@ -78,7 +74,7 @@ func (b *Builder) mapObject(source reflect.Value, parent reflect.Value, interfac
 		Interfaces: interfaces,
 	})
 	b.queryTypes[name] = obj
-	return obj, nil
+	return obj
 }
 
 func (b *Builder) mapIntersection(source reflect.Value, isInput bool) Intersection {

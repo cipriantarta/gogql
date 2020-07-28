@@ -12,17 +12,21 @@ type relayInfo struct {
 	key    string
 	method string
 }
+
+// PageInfo relay pagination info
 type PageInfo struct {
 	StartCursor string `graphql:"required"`
 	EndCursor   string `graphql:"required"`
 	HasMore     bool   `graphql:"required"`
 }
 
+// Edge relay edge
 type Edge struct {
 	Node   interface{}
 	Cursor string `graphql:"required"`
 }
 
+// Connection relay connection
 type Connection struct {
 	PageInfo *PageInfo
 	Edges    interface{}
@@ -43,27 +47,16 @@ func (b *Builder) buildConnection(source reflect.Value, parent reflect.Value) gr
 		el = reflect.New(source.Type().Elem()).Elem()
 	}
 	name := typeName(el.Type())
-	node, err := b.mapObject(el, parent, []*graphql.Interface{b.interfaces["INode"]}, name+"Node")
-	if err != nil {
-		panic(err)
-	}
+	node := b.mapObject(el, parent, []*graphql.Interface{b.interfaces["INode"]}, name+"Node")
 	node.Fields()["id"].Type = graphql.NewNonNull(node.Fields()["id"].Type)
 
-	if _, err := b.mapObject(reflect.ValueOf(&PageInfo{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IPageInfo"]}, ""); err != nil {
-		panic(err)
-	}
+	_ = b.mapObject(reflect.ValueOf(&PageInfo{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IPageInfo"]}, "")
 
-	edge, err := b.mapObject(reflect.ValueOf(&Edge{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IEdge"]}, name+"Edge")
-	if err != nil {
-		panic(err)
-	}
+	edge := b.mapObject(reflect.ValueOf(&Edge{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IEdge"]}, name+"Edge")
 	edge.AddFieldConfig("node", &graphql.Field{Type: graphql.NewNonNull(node)})
 	edges := graphql.NewList(edge)
 
-	connection, err := b.mapObject(reflect.ValueOf(&Connection{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IConnection"]}, name+"Connection")
-	if err != nil {
-		panic(err)
-	}
+	connection := b.mapObject(reflect.ValueOf(&Connection{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IConnection"]}, name+"Connection")
 	connection.AddFieldConfig("edges", &graphql.Field{Type: graphql.NewNonNull(edges)})
 	return graphql.NewNonNull(connection)
 }
