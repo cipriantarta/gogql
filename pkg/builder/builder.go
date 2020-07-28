@@ -27,6 +27,7 @@ type nodeType struct {
 	relay        *relayInfo
 }
 
+// Builder GraphQL schema builder
 type Builder struct {
 	scalars         map[string]*graphql.Scalar
 	queryTypes      map[string]*graphql.Object
@@ -36,6 +37,7 @@ type Builder struct {
 	PaginationLimit int
 }
 
+// New builder
 func New() *Builder {
 	return &Builder{
 		scalars:         scalars,
@@ -62,6 +64,7 @@ func (b *Builder) Enum(name string, value *graphql.Enum) {
 	b.enums[name] = value
 }
 
+// QueryFields - builds the query fields for a graphql object
 func (b *Builder) QueryFields(source reflect.Value, parent reflect.Value) (graphql.Fields, error) {
 	result := make(graphql.Fields, 0)
 	if source.IsValid() && source.IsZero() {
@@ -116,6 +119,7 @@ func (b *Builder) QueryFields(source reflect.Value, parent reflect.Value) (graph
 	return result, nil
 }
 
+// InputFields - build the GraphQL fields for an input object
 func (b *Builder) InputFields(source reflect.Value, parent reflect.Value) (graphql.InputObjectConfigFieldMap, error) {
 	result := make(graphql.InputObjectConfigFieldMap, 0)
 	nodes, err := b.buildObject(source, parent)
@@ -308,7 +312,7 @@ func (b *Builder) resolver(source reflect.Value, fieldName string, isRelay bool,
 				if err := mapstructure.Decode(p.Args, &arg); err != nil {
 					panic(err)
 				}
-				arg = reflect.Zero(methodType.In(2)).Interface()
+				arg = reflect.Zero(methodType.In(1)).Interface()
 				in[1] = reflect.ValueOf(arg)
 			}
 
