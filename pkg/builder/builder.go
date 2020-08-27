@@ -124,7 +124,10 @@ func (b *Builder) InputFields(source reflect.Value, parent reflect.Value) graphq
 			continue
 		}
 
-		name := strcase.ToLowerCamel(node.name)
+		name := node.alias
+		if name == "" {
+			name = strcase.ToLowerCamel(node.name)
+		}
 		gType := b.mapInput(node.source, parent)
 		if node.required {
 			gType = graphql.NewNonNull(gType)
