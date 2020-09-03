@@ -8,6 +8,7 @@ import (
 )
 
 var scalars = map[string]*graphql.Scalar{
+	"ID":                               graphql.ID,
 	reflect.TypeOf(bool(false)).Name(): graphql.Boolean,
 	reflect.TypeOf(int(0)).Name():      graphql.Int,
 	reflect.TypeOf(int8(0)).Name():     graphql.Int,

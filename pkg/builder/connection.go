@@ -2,6 +2,7 @@ package builder
 
 import (
 	"encoding/base64"
+	"fmt"
 	"reflect"
 
 	"github.com/cipriantarta/gogql/pkg/types"
@@ -28,7 +29,7 @@ type Edge struct {
 
 // Connection relay connection
 type Connection struct {
-	PageInfo *PageInfo
+	PageInfo *PageInfo `graphql:"required"`
 	Edges    interface{}
 }
 
@@ -48,7 +49,6 @@ func (b *Builder) buildConnection(source reflect.Value, parent reflect.Value) gr
 	}
 	name := typeName(el.Type())
 	node := b.mapObject(el, parent, []*graphql.Interface{b.interfaces["INode"]}, name+"Node")
-	node.Fields()["id"].Type = graphql.NewNonNull(node.Fields()["id"].Type)
 
 	_ = b.mapObject(reflect.ValueOf(&PageInfo{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IPageInfo"]}, "")
 
@@ -86,7 +86,7 @@ func connectionResolver(nodes interface{}, err error, relayInfo *relayInfo, page
 			r := m.Call(nil)
 			cursor = r[0]
 		}
-		c := toGlobalID(cursor.Interface().(string))
+		c := toGlobalID(fmt.Sprintf("%v", cursor.Interface()))
 		edges = append(edges, &Edge{
 			Cursor: c,
 			Node:   node.Interface(),

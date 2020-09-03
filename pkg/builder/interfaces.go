@@ -2,6 +2,7 @@ package builder
 
 import "github.com/graphql-go/graphql"
 
+//IPageInfo pagination information interface
 var IPageInfo = graphql.NewInterface(graphql.InterfaceConfig{
 	Name: "IPageInfo",
 	Fields: graphql.Fields{
@@ -12,7 +13,7 @@ var IPageInfo = graphql.NewInterface(graphql.InterfaceConfig{
 			Type: graphql.String,
 		},
 		"hasMore": &graphql.Field{
-			Type: graphql.Boolean,
+			Type: graphql.NewNonNull(graphql.Boolean),
 		},
 	},
 	Description: "Relay pagination",
@@ -24,7 +25,7 @@ func (b *Builder) buildInterfaces() {
 			Name: "INode",
 			Fields: graphql.Fields{
 				"id": &graphql.Field{
-					Type: b.scalars["ID"],
+					Type: graphql.NewNonNull(b.scalars["ID"]),
 				},
 			},
 			Description: "Relay node interface",
@@ -38,7 +39,7 @@ func (b *Builder) buildInterfaces() {
 					Type: b.interfaces["INode"],
 				},
 				"cursor": &graphql.Field{
-					Type: graphql.String,
+					Type: graphql.NewNonNull(graphql.String),
 				},
 			},
 			Description: "Relay edge interface",
@@ -55,7 +56,7 @@ func (b *Builder) buildInterfaces() {
 					Type: graphql.NewList(b.interfaces["IEdge"]),
 				},
 				"pageInfo": &graphql.Field{
-					Type: b.interfaces["IPageInfo"],
+					Type: graphql.NewNonNull(b.interfaces["IPageInfo"]),
 				},
 			},
 			Description: "Relay connnection interface",

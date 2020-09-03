@@ -7,6 +7,7 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
+//New builds a new graphl Schema
 func New(query interface{},
 	mutation interface{},
 	scalars map[string]*graphql.Scalar,
