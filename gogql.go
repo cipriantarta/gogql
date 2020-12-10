@@ -8,8 +8,10 @@ import (
 )
 
 //New builds a new graphl Schema
-func New(query interface{},
+func New(
+	query interface{},
 	mutation interface{},
+	subscription interface{},
 	scalars map[string]*graphql.Scalar,
 	enums map[string]*graphql.Enum,
 	objectTypes map[string]*graphql.Object, paginationLimit int) (*graphql.Schema, error) {
@@ -31,16 +33,29 @@ func New(query interface{},
 		return nil, err
 	}
 
-	var mutationObject *graphql.Object
+	var mutationObj *graphql.Object
 	if mutation != nil {
 		mf, err := b.QueryFields(reflect.ValueOf(mutation), reflect.Value{})
 		if err != nil {
 			return nil, err
 		}
-		mutationObject = graphql.NewObject(
+		mutationObj = graphql.NewObject(
 			graphql.ObjectConfig{
 				Name:   "Mutation",
 				Fields: mf,
+			})
+	}
+
+	var subscriptionObj *graphql.Object
+	if subscription != nil {
+		sf, err := b.QueryFields(reflect.ValueOf(subscription), reflect.Value{})
+		if err != nil {
+			return nil, err
+		}
+		subscriptionObj = graphql.NewObject(
+			graphql.ObjectConfig{
+				Name:   "Subscription",
+				Fields: sf,
 			})
 	}
 
@@ -50,22 +65,11 @@ func New(query interface{},
 				Name:   "Query",
 				Fields: qf,
 			}),
-		Mutation: mutationObject,
+		Mutation:     mutationObj,
+		Subscription: subscriptionObj,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &s, nil
-}
-
-type Connection struct {
-	t reflect.Value
-}
-
-func NewConnection(i interface{}) *Connection {
-	return &Connection{t: reflect.ValueOf(i)}
-}
-
-func (c *Connection) Type() reflect.Value {
-	return c.t
 }

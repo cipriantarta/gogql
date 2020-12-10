@@ -68,7 +68,7 @@ func (m *Mutation) ResolveCreateVehicle(p graphql.ResolveParams, data *Vehicle) 
 
 func TestQuery(t *testing.T) {
 	root := &Query{}
-	s, err := gogql.New(root, nil, nil, nil, nil, 10)
+	s, err := gogql.New(root, nil, nil, nil, nil, nil, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,7 +97,7 @@ func TestQuery(t *testing.T) {
 func TestMutation(t *testing.T) {
 	q := &Query{}
 	m := &Mutation{}
-	s, err := gogql.New(q, m, nil, nil, nil, 10)
+	s, err := gogql.New(q, m, nil, nil, nil, nil, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +120,7 @@ func TestMutation(t *testing.T) {
 func TestMutationWithNestedStruct(t *testing.T) {
 	q := &Query{}
 	m := &Mutation{}
-	s, err := gogql.New(q, m, nil, nil, nil, 10)
+	s, err := gogql.New(q, m, nil, nil, nil, nil, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +156,7 @@ func TestMutationWithNestedStruct(t *testing.T) {
 
 func TestQueryConnection(t *testing.T) {
 	root := &Query{}
-	s, err := gogql.New(root, nil, nil, nil, nil, 10)
+	s, err := gogql.New(root, nil, nil, nil, nil, nil, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
