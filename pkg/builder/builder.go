@@ -29,8 +29,8 @@ type nodeType struct {
 // Builder GraphQL schema builder
 type Builder struct {
 	scalars         map[string]*graphql.Scalar
-	queryTypes      map[string]*graphql.Object
-	mutationTypes   map[string]*graphql.InputObject
+	queryTypes      map[string]graphql.Output
+	mutationTypes   map[string]graphql.Input
 	interfaces      map[string]*graphql.Interface
 	enums           map[string]*graphql.Enum
 	PaginationLimit int
@@ -41,8 +41,8 @@ func New() *Builder {
 	return &Builder{
 		scalars:         scalars,
 		interfaces:      make(map[string]*graphql.Interface),
-		queryTypes:      make(map[string]*graphql.Object),
-		mutationTypes:   make(map[string]*graphql.InputObject),
+		queryTypes:      make(map[string]graphql.Output),
+		mutationTypes:   make(map[string]graphql.Input),
 		enums:           make(map[string]*graphql.Enum),
 		PaginationLimit: 100,
 	}
@@ -54,7 +54,7 @@ func (b *Builder) Scalar(name string, value *graphql.Scalar) {
 }
 
 // Object - Add/Replace an existing object type with a custom one
-func (b *Builder) Object(name string, value *graphql.Object) {
+func (b *Builder) Object(name string, value graphql.Output) {
 	b.queryTypes[name] = value
 }
 

@@ -1,1 +1,1 @@
-
+![Build](https://github.com/cipriantarta/gogql/workflows/Go/badge.svg)

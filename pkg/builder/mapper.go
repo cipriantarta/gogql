@@ -55,7 +55,7 @@ func (b *Builder) mapInput(source reflect.Value, parent reflect.Value) graphql.I
 	return o
 }
 
-func (b *Builder) mapObject(source reflect.Value, parent reflect.Value, interfaces []*graphql.Interface, alias string) *graphql.Object {
+func (b *Builder) mapObject(source reflect.Value, parent reflect.Value, interfaces []*graphql.Interface, alias string) graphql.Output {
 	name := alias
 	if name == "" {
 		name = typeName(source.Type())

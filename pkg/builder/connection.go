@@ -52,11 +52,11 @@ func (b *Builder) buildConnection(source reflect.Value, parent reflect.Value) gr
 
 	_ = b.mapObject(reflect.ValueOf(&PageInfo{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IPageInfo"]}, "")
 
-	edge := b.mapObject(reflect.ValueOf(&Edge{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IEdge"]}, name+"Edge")
+	edge := b.mapObject(reflect.ValueOf(&Edge{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IEdge"]}, name+"Edge").(*graphql.Object)
 	edge.AddFieldConfig("node", &graphql.Field{Type: graphql.NewNonNull(node)})
 	edges := graphql.NewList(edge)
 
-	connection := b.mapObject(reflect.ValueOf(&Connection{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IConnection"]}, name+"Connection")
+	connection := b.mapObject(reflect.ValueOf(&Connection{}), reflect.Value{}, []*graphql.Interface{b.interfaces["IConnection"]}, name+"Connection").(*graphql.Object)
 	connection.AddFieldConfig("edges", &graphql.Field{Type: graphql.NewNonNull(edges)})
 	return graphql.NewNonNull(connection)
 }

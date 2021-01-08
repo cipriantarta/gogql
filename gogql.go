@@ -7,21 +7,39 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
+// Scalars - graphql map for scalar types
+type Scalars map[string]*graphql.Scalar
+
+// Enums - graphql map for enum types
+type Enums map[string]*graphql.Enum
+
+// Interfaces - graphql map for interfaces
+type Interfaces map[string]*graphql.Interface
+
+// InputObjects - graphql map for input types
+type InputObjects map[string]graphql.Input
+
+// OutputObjects - graphql map for output types
+type OutputObjects map[string]graphql.Output
+
 //New builds a new graphl Schema
 func New(
 	query interface{},
 	mutation interface{},
 	subscription interface{},
-	scalars map[string]*graphql.Scalar,
-	enums map[string]*graphql.Enum,
-	objectTypes map[string]*graphql.Object, paginationLimit int) (*graphql.Schema, error) {
+	scalars Scalars,
+	enums Enums,
+	interfaces Interfaces,
+	queryTypes OutputObjects,
+	mutationTypes InputObjects,
+	paginationLimit int) (*graphql.Schema, error) {
 
 	b := builder.New()
 	b.PaginationLimit = paginationLimit
 	for k, v := range scalars {
 		b.Scalar(k, v)
 	}
-	for k, v := range objectTypes {
+	for k, v := range queryTypes {
 		b.Object(k, v)
 	}
 	for k, v := range enums {
